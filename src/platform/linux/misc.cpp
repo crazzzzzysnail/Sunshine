@@ -131,12 +131,15 @@ std::pair<std::uint16_t, std::string> from_sockaddr_ex(const sockaddr *const ip_
 std::string get_mac_address(const std::string_view &address) {
   auto ifaddrs = get_ifaddrs();
   for(auto pos = ifaddrs.get(); pos != nullptr; pos = pos->ifa_next) {
-    if(pos->ifa_addr && address == from_sockaddr(pos->ifa_addr)) {
-      std::ifstream mac_file("/sys/class/net/"s + pos->ifa_name + "/address");
-      if(mac_file.good()) {
-        std::string mac_address;
-        std::getline(mac_file, mac_address);
-        return mac_address;
+    if(pos->ifa_addr) {
+      std::string posAddress = from_sockaddr(pos->ifa_addr);
+      if (address == posAddress || address == "::ffff:" + posAddress) {
+        std::ifstream mac_file("/sys/class/net/"s + pos->ifa_name + "/address");
+        if(mac_file.good()) {
+          std::string mac_address;
+          std::getline(mac_file, mac_address);
+          return mac_address;
+        }
       }
     }
   }
